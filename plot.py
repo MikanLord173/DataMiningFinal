@@ -14,8 +14,6 @@ def plot2d(X, y, title:str):
     # - c=y：根據 label 上色
     # - cmap='tab10'：使用 10 色分類色盤
     # - alpha=0.7：設定透明度，讓圖點不會太實心
-    plt.xlabel("Feature 1")
-    plt.ylabel("Feature 2")
     plt.title(title)
 
     # 根據 label 自動產生圖例（legend），每個顏色對應一個類別
@@ -23,6 +21,7 @@ def plot2d(X, y, title:str):
 
     plt.gca().add_artist(legend)    # 把圖例加到目前的座標軸中
     plt.grid(True)
+    plt.show()
 
 def plot2d_subplots(datasets, labels, titles, size=(2, 2)):
     """

@@ -27,16 +27,16 @@ train_data_standardized, test_data_standardized = process.standardize(train_data
 # 挑出離群值
 train_data_IQR, train_label_IQR = process.IQR(train_data=train_data_standardized, train_label=train_label, target=(1,))
 # 超取樣
-train_data_processed, train_label_processed = process.oversampling(train_data=train_data_IQR, train_label=train_label_IQR)
+train_data_processed, train_label_processed = process.oversampling(train_data=train_data_IQR, train_label=train_label_IQR, max_count=25)
 
 datasets = [train_data_imputed, train_data_standardized, train_data_IQR, train_data_processed]
 labels = [train_label, train_label, train_label_IQR, train_label_processed]
 titles = ["Imputed", "Standardlized", "After IQR", "Oversampled"]
 
-plot2d_subplots(datasets, labels, titles)
+#plot2d_subplots(datasets, labels, titles, size=(2, 2))
 
 clfs = (
-    RandomForestClassifier(n_estimators=100),   # 隨機森林
+    RandomForestClassifier(n_estimators=217),   # 隨機森林
     KNeighborsClassifier(n_neighbors=20),       # KNN
     GaussianNB(),                               # Naive Bayes
     LogisticRegression()                        # 邏輯回歸
@@ -48,7 +48,7 @@ pred_label = clfs[clf_index].predict(test_data)
 pred_probas = clfs[clf_index].predict_proba(test_data)
 max_proba = np.max(pred_probas, axis=1)
 
-adj_pred_label = np.where(max_proba >= 0.5, pred_label, -1)
+adj_pred_label = np.where(max_proba >= 0.5, pred_label, "Unknown")
 
 df = pd.DataFrame({
     'True Label': test_label,
@@ -61,6 +61,11 @@ df.to_excel(dir_str + f"test{clf_index}.xlsx", index=True)
 
 unsure_data = test_data[max_proba < 0.5]
 unsure_label_true = test_label[max_proba < 0.5]
+
+datasets = [train_data_processed, test_data_standardized]
+labels = [train_label_processed, adj_pred_label]
+titles = ["Train data", "Classified test data"]
+plot2d_subplots(datasets, labels, titles, size=(2, 1))
 
 df_unsure = pd.DataFrame(unsure_data)
 df_unsure['True Label'] = unsure_label_true

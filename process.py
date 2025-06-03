@@ -1,6 +1,7 @@
 # 此檔案中的函數用於對資料進行前處理
 
 import pandas as pd
+import numpy as np
 from sklearn.impute import SimpleImputer    # 補上缺失值
 from sklearn.preprocessing import StandardScaler    # 標準化
 from imblearn.over_sampling import RandomOverSampler
@@ -57,8 +58,20 @@ def IQR(train_data, train_label, target:tuple=None):
         cleaned_label = label_series[~mask].values
     return cleaned_data, cleaned_label
 
-def oversampling(train_data, train_label):
-    #smote = SMOTE(random_state=57, k_neighbors=1)
-    #return smote.fit_resample(train_data, train_label)
-    ros = RandomOverSampler(random_state=57)
-    return ros.fit_resample(train_data, train_label)
+def oversampling(train_data, train_label, max_count=None):
+    label_count = dict()
+    for label in np.unique(train_label):
+        label_count[label] = np.sum(train_label == label)
+    if not max_count:
+        max_count = max(label_count.values())
+    strategy = dict()
+    for key, value in label_count.items():
+        if value >= 5:
+            strategy[key] = max(max_count, value)
+
+    print(strategy)
+
+    ros = RandomOverSampler(random_state=57, sampling_strategy=strategy)
+    #smote = SMOTE(random_state=42, sampling_strategy=strategy)
+    data_resampled, label_resampled = ros.fit_resample(train_data, train_label)
+    return data_resampled, label_resampled
