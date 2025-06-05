@@ -186,8 +186,6 @@ def oversampling(train_data, train_label, max_count=None):
         if value >= 5:
             strategy[key] = max(max_count, value)
 
-    print(strategy)
-
     ros = RandomOverSampler(random_state=57, sampling_strategy=strategy)
     data_resampled, label_resampled = ros.fit_resample(train_data, train_label)
     return data_resampled, label_resampled

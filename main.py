@@ -17,16 +17,16 @@ from kmeans import KMeans
 # 0: 補缺失值 -> 挑出離群值 (IQR) -> 標準化 -> oversampling
 # 1: 補缺失值 -> 標準化 -> 挑出離群值 (zscore) -> oversampling
 # 2: 補缺失值 -> 標準化 -> undersampling -> oversampling
-METHOD = 0
+METHOD = 1
 # 0: Random Forest
-# 1: KNN
+# 1: KNN，放棄修
 # 2: Naive Bayes
 # 3: 邏輯回歸
-CLF = 2
+CLF = 0
 # 開關 K-means++
 PP = False
 # 分類信心低於 UNKNOWN_THRESHOLD 會被分成未知類（之後拿去分群）
-UNKNOWN_THRESHOLD = 0.4
+UNKNOWN_THRESHOLD = 0.40
 
 ## ------------------------------------------------ ##
 
@@ -46,10 +46,6 @@ clfs = (
     LogisticRegression()                        # 邏輯回歸
 )
 
-# 用來挑選資料集
-data_set_names = ("Arrhythmia Data Set", "gene expression cancer RNA-Seq Data Set")
-using_data_set = 0
-
 # 取得當前路徑，以便讀取/寫入檔案
 current_dir = os.getcwd()
 dir_str = current_dir + "/DataMining/final/"
@@ -57,10 +53,10 @@ os.makedirs(f"{dir_str}/Figures/method{METHOD}_clf{CLF}_{"no" if not PP else ""}
 
 # 從 csv 檔讀取各項資料
 # 資料型態：data -> np.ndarray; label -> pd.Series
-train_data_init = pd.read_csv(dir_str + f"{data_set_names[using_data_set]}/train_data.csv", header=None).values
-train_label_init = pd.read_csv(dir_str + f"{data_set_names[using_data_set]}/train_label.csv", header=None)[0]
-test_data_init = pd.read_csv(dir_str + f"{data_set_names[using_data_set]}/test_data.csv", header=None).values
-test_label = pd.read_csv(dir_str + f"{data_set_names[using_data_set]}/test_label.csv", header=None)[0].values
+train_data_init = pd.read_csv(dir_str + f"Arrhythmia Data Set/train_data.csv", header=None).values
+train_label_init = pd.read_csv(dir_str + f"Arrhythmia Data Set/train_label.csv", header=None)[0]
+test_data_init = pd.read_csv(dir_str + f"Arrhythmia Data Set/test_data.csv", header=None).values
+test_label = pd.read_csv(dir_str + f"Arrhythmia Data Set/test_label.csv", header=None)[0].values
 
 train_data, test_data, train_label, datasets, labels = method_func[METHOD](train_data_init, test_data_init, train_label_init)
 plot2d_subplots(datasets, labels, subplot_titles[METHOD], size=(2, 2), path=f"{dir_str}/Figures/method{METHOD}_clf{CLF}_{"no" if not PP else ""}pp/4steps.png") # 四個步驟的結果分別製作一張分佈圖
@@ -80,14 +76,17 @@ df = pd.DataFrame({
     'Adjusted Label': adjusted_label,
     'Probability': max_proba
 })
+print(f'True = Pred: {np.sum(test_label==pred_label)}')
+print(f'Right but unsure: {np.sum((test_label==pred_label) & (adjusted_label=='Unknown'))}')
+print(f'Wrong but confident: {np.sum((test_label!=pred_label) & (adjusted_label!='Unknown'))}')
 
 df.to_excel(dir_str + f"test{CLF}.xlsx", index=True)
 
 # 製圖，上半為預處理後的訓練資料；下半為測試資料
-datasets = [train_data, test_data]
+'''datasets = [train_data, test_data]
 labels = [train_label, adjusted_label]
 titles = ["Train data", "Classified test data"]
-plot2d_subplots(datasets, labels, titles, size=(2, 1), path=f"{dir_str}/Figures/method{METHOD}_clf{CLF}_{"no" if not PP else ""}pp/Train_Test.png")
+plot2d_subplots(datasets, labels, titles, size=(2, 1), path=f"{dir_str}/Figures/method{METHOD}_clf{CLF}_{"no" if not PP else ""}pp/Train_Test.png")'''
 
 unsure_mask = adjusted_label == "Unknown"
 unsure_data = test_data[unsure_mask]
